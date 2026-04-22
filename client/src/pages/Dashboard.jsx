@@ -102,92 +102,112 @@ export default function Dashboard() {
     : user?.role === 'recruiter' ? RecruiterDashboard : StudentDashboard;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Header Section */}
-      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-[0.3em] text-text-muted">AI Powered Portal</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+      {/* Premium Header Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        className="glass-card p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-br from-white/5 to-transparent"
+      >
+        <div className="text-center md:text-left space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
+            <Sparkles className="w-4 h-4 animate-pulse" />
+            Next-Gen Placement Suite
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight">
-            {greeting}, <span className="gradient-text">{user?.name?.split(' ')[0]}</span>
+          <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight leading-tight">
+            {greeting}, <br className="sm:hidden" />
+            <span className="gradient-text">{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p className="text-text-secondary mt-2 text-lg">Your placement analytics are looking great today.</p>
+          <p className="text-text-secondary text-lg max-w-md">
+            Your placement ecosystem is optimized and ready for today's challenges.
+          </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="px-5 py-3 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-[10px] text-text-muted font-black uppercase tracking-widest leading-none mb-1">Current Status</p>
-              <p className="text-sm font-bold text-white">Actively Seeking</p>
+        <div className="shrink-0">
+          <div className="glass-card p-6 border-primary/20 bg-primary/5 flex flex-col items-center gap-4 text-center min-w-[200px]">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center relative">
+              <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping absolute" />
+              <div className="w-3 h-3 rounded-full bg-emerald-500 relative" />
             </div>
-            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-glow shadow-emerald-500/50" />
+            <div>
+              <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] mb-1">Current Status</p>
+              <p className="text-lg font-bold text-white tracking-tight">Actively Seeking</p>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-32 rounded-3xl" />)}
+      {/* Stats Grid */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-2xl font-bold tracking-tight">Performance Metrics</h2>
+          <div className="text-xs text-text-muted font-bold flex items-center gap-2">
+            Updated just now <Clock className="w-3 h-3" />
+          </div>
         </div>
-      ) : (
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
-          <DashboardView stats={stats} />
-        </motion.div>
-      )}
+        
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-40 rounded-3xl" />)}
+          </div>
+        ) : (
+          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-stats">
+            <DashboardView stats={stats} />
+          </motion.div>
+        )}
+      </section>
 
       {/* Quick Actions & Journey */}
       {user?.role === 'student' && (
-        <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Actions */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="lg:col-span-2">
-            <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-              Next Steps <ArrowRight className="w-5 h-5 text-text-muted" />
-            </h2>
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight">Accelerate Your Journey</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { to: '/resume', label: 'Analyse Resume', desc: 'Instant ATS scoring & gap analysis', icon: FileText, color: 'from-blue-500 to-indigo-600' },
+                { to: '/resume', label: 'Analyse Resume', desc: 'ATS scoring & gap analysis', icon: FileText, color: 'from-blue-500 to-indigo-600' },
                 { to: '/interview', label: 'Practice Interview', desc: 'Mock technical & HR rounds', icon: MessageSquare, color: 'from-purple-500 to-pink-600' },
-                { to: '/jobs', label: 'Find Jobs', desc: 'Curated roles for your skill profile', icon: Briefcase, color: 'from-emerald-500 to-teal-600' },
-                { to: '/learning', label: 'Upskill Now', desc: 'Personalized AI learning paths', icon: GraduationCap, color: 'from-orange-500 to-rose-600' },
+                { to: '/jobs', label: 'Find Jobs', desc: 'Curated roles for your profile', icon: Briefcase, color: 'from-emerald-500 to-teal-600' },
+                { to: '/learning', label: 'Upskill Now', desc: 'AI learning paths', icon: GraduationCap, color: 'from-orange-500 to-rose-600' },
               ].map((a, i) => (
                 <Link key={a.to} to={a.to}
                   className="glass-card p-6 flex items-start gap-4 group hover:border-primary/40 transition-all duration-500">
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center shrink-0 shadow-lg`}>
-                    <a.icon className="w-6 h-6 text-white" />
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
+                    <a.icon className="w-7 h-7 text-white" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-display font-bold text-base group-hover:text-primary transition-colors">{a.label}</p>
-                      <ArrowRight className="w-4 h-4 text-text-muted opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      <p className="font-display font-bold text-lg group-hover:text-primary transition-colors">{a.label}</p>
+                      <ArrowRight className="w-5 h-5 text-text-muted opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
-                    <p className="text-text-secondary text-xs leading-relaxed">{a.desc}</p>
+                    <p className="text-text-secondary text-sm leading-relaxed">{a.desc}</p>
                   </div>
                 </Link>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Activity/News Feed */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className="space-y-6">
-            <h2 className="font-display text-2xl font-bold mb-6">Placement News</h2>
-            <div className="glass-card p-6 divide-y divide-white/5 space-y-4">
+          {/* Feed */}
+          <div className="space-y-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight">Live Updates</h2>
+            <div className="glass-card p-8 divide-y divide-white/5 space-y-6">
               {[
-                { title: 'Google SDE-1 Hiring', time: '2h ago', tag: 'Hot' },
-                { title: 'Interview with Amazon', time: 'Tomorrow', tag: 'Reminder' },
-                { title: 'New Learning Roadmap', time: '1d ago', tag: 'AI' },
+                { title: 'Google SDE-1 Hiring', time: '2h ago', tag: 'Hot', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
+                { title: 'Interview with Amazon', time: 'Tomorrow', tag: 'Reminder', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+                { title: 'New Learning Roadmap', time: '1d ago', tag: 'AI', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
               ].map((n, i) => (
-                <div key={i} className={`pt-4 first:pt-0 group cursor-pointer`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-primary">{n.tag}</span>
-                    <span className="text-[10px] text-text-muted">{n.time}</span>
+                <div key={i} className="pt-6 first:pt-0 group cursor-pointer space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${n.color}`}>
+                      {n.tag}
+                    </span>
+                    <span className="text-[10px] text-text-muted font-bold">{n.time}</span>
                   </div>
-                  <p className="text-sm font-bold group-hover:text-primary transition-colors">{n.title}</p>
+                  <p className="text-sm font-bold group-hover:text-primary transition-colors leading-tight">{n.title}</p>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
