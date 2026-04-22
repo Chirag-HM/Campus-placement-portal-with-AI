@@ -118,27 +118,20 @@ export const aiCoach = async (req, res) => {
     const { prompt, context } = req.body;
     const user = await User.findById(req.user._id);
 
-    // Dynamic prompt based on where the user is
-    let systemPrompt = `You are Coach Gemini, a premium career advisor on the PlaceAI Campus Placement Portal.
+    const systemPrompt = `You are Coach Gemini, a premium career advisor on the PlaceAI Campus Placement Portal.
 The user is currently on the "${context}" page.
 User Info: Name: ${user.name}, Role: ${user.role}, Skills: ${user.skills?.join(', ') || 'Not set'}.
 
-Be encouraging, professional, and concise. Provide actionable advice for their placement journey.`;
+Be encouraging, professional, and concise. Provide actionable advice for their placement journey.
+User Question: ${prompt}
 
-    const fullPrompt = `${systemPrompt}\n\nUser Question: ${prompt}\n\nReturn a JSON with a single "response" field.`;
+Return a JSON with a single "response" field.`;
 
-    const genAI = new (await import('@google/generative-ai')).GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-      generationConfig: { responseMimeType: 'application/json' }
-    });
-
-    const response = JSON.parse(result.response.text());
-    res.json(response);
+    // Use centralized AI service for consistency
+    const result = await aiService.callAI(systemPrompt);
+    res.json({ response: result.response });
   } catch (error) {
-    console.error('Coach Error:', error);
+    console.error('❌ Coach Error:', error);
     res.status(500).json({ response: "I'm a bit overwhelmed right now. Try again in a moment!" });
   }
 };

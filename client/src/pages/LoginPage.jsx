@@ -1,9 +1,43 @@
-import { motion } from 'framer-motion';
-import { LogIn, Sparkles, ShieldCheck, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogIn, Sparkles, ShieldCheck, Zap, Mail, Lock, User as UserIcon, Loader2, ArrowRight, UserPlus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import AICaptcha from '@/components/AICaptcha';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, emailLogin, emailRegister } = useAuth();
+  const navigate = useNavigate();
+  const [isRegister, setIsRegister] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student'
+  });
+  const [isVerified, setIsVerified] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isVerified) return;
+    setLoading(true);
+    setError('');
+    
+    try {
+      if (isRegister) {
+        await emailRegister(formData.name, formData.email, formData.password, formData.role);
+      } else {
+        await emailLogin(formData.email, formData.password);
+      }
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
@@ -29,8 +63,8 @@ export default function LoginPage() {
           </motion.div>
           
           <h2 className="text-4xl font-display font-bold leading-tight mb-4">
-            Accelerate Your <br />
-            <span className="gradient-text">Career Journey</span>
+            {isRegister ? "Start Your" : "Accelerate Your"} <br />
+            <span className="gradient-text">{isRegister ? "New Future" : "Career Journey"}</span>
           </h2>
           
           <p className="text-slate-400 text-lg mb-8">
@@ -42,7 +76,7 @@ export default function LoginPage() {
               <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
                 <ShieldCheck className="w-3 h-3 text-emerald-400" />
               </div>
-              <span>Secure Authentication via Google</span>
+              <span>Secure Authentication via Neural Protocol</span>
             </div>
             <div className="flex items-center gap-3 text-slate-300 text-sm">
               <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -55,9 +89,17 @@ export default function LoginPage() {
 
         {/* Right Section: Form */}
         <div className="p-8 lg:p-12 flex flex-col justify-center bg-slate-900/40">
-          <div className="text-center lg:text-left mb-8">
-            <h1 className="text-3xl font-display font-bold mb-2 text-white">Welcome Back</h1>
-            <p className="text-slate-400">Sign in to your account</p>
+          <div className="text-center lg:text-left mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-display font-bold mb-2 text-white">{isRegister ? 'Create Account' : 'Welcome Back'}</h1>
+              <p className="text-slate-400">{isRegister ? 'Begin your AI-powered journey' : 'Sign in to your account'}</p>
+            </div>
+            <button 
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:text-white transition-colors"
+            >
+              {isRegister ? 'Sign In' : 'Register'}
+            </button>
           </div>
 
           <button 
@@ -70,21 +112,93 @@ export default function LoginPage() {
 
           <div className="relative flex items-center gap-4 text-slate-500 py-8">
             <div className="h-[1px] flex-1 bg-white/10" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Enterprise</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Enterprise Access</span>
             <div className="h-[1px] flex-1 bg-white/10" />
           </div>
 
-          <div className="space-y-4 opacity-40 grayscale">
-            <input 
-              type="email" 
-              placeholder="Email address" 
-              className="w-full p-4 bg-slate-950/50 border border-white/5 rounded-xl text-white outline-none cursor-not-allowed"
-              disabled 
-            />
-            <button className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-slate-500 cursor-not-allowed">
-              Sign in with Email
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <AnimatePresence mode="wait">
+              {isRegister && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="relative">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input 
+                      type="text" 
+                      placeholder="Full Name" 
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-950/50 border border-white/5 rounded-2xl text-white outline-none focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    {['student', 'recruiter'].map(role => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => setFormData({...formData, role})}
+                        className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all
+                          ${formData.role === role ? 'bg-primary/20 border-primary text-white' : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/10'}`}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="email" 
+                placeholder="Email address" 
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full pl-12 pr-4 py-4 bg-slate-950/50 border border-white/5 rounded-2xl text-white outline-none focus:border-primary/50 transition-all"
+              />
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="w-full pl-12 pr-4 py-4 bg-slate-950/50 border border-white/5 rounded-2xl text-white outline-none focus:border-primary/50 transition-all"
+              />
+            </div>
+
+            <AICaptcha onVerify={setIsVerified} />
+
+            {error && (
+              <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest text-center">{error}</p>
+            )}
+
+            <button 
+              type="submit"
+              disabled={!isVerified || loading}
+              className="btn-primary w-full py-4 text-sm shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              {loading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+              ) : (
+                <>
+                  {isRegister ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                  {isRegister ? 'Create AI Profile' : 'Sign in to Portal'}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
-          </div>
+          </form>
 
           <p className="mt-8 text-center text-[10px] text-slate-500 leading-relaxed uppercase tracking-tighter">
             By signing in, you agree to our <br />

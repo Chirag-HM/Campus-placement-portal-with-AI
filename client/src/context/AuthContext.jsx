@@ -36,6 +36,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const emailLogin = useCallback(async (email, password) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    localStorage.setItem('token', data.token);
+    setToken(data.token);
+    return data.user;
+  }, []);
+
+  const emailRegister = useCallback(async (name, email, password, role) => {
+    const { data } = await api.post('/auth/register', { name, email, password, role });
+    localStorage.setItem('token', data.token);
+    setToken(data.token);
+    return data.user;
+  }, []);
+
   const loginWithGoogle = useCallback(() => {
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     window.location.href = `${baseUrl}/auth/google`;
@@ -44,6 +58,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, token, loading, login, logout, loginWithGoogle,
+      emailLogin, emailRegister,
       isAuthenticated: !!user,
       refreshUser: fetchUser,
     }}>

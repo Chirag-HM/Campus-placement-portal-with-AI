@@ -28,8 +28,6 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      // In a real app, you'd have a specific endpoint for the coach
-      // For now, we'll simulate it or use a generic AI endpoint if available
       const { data } = await api.post('/user/ai-coach', { 
         prompt: message,
         context: window.location.pathname 
@@ -37,7 +35,8 @@ export default function AIAssistant() {
       
       setChat(prev => [...prev, { role: 'ai', text: data.response }]);
     } catch (error) {
-      setChat(prev => [...prev, { role: 'ai', text: 'Sorry, I\'m having trouble connecting right now.' }]);
+      const errorMsg = error.response?.data?.response || 'Sorry, I\'m having trouble connecting right now.';
+      setChat(prev => [...prev, { role: 'ai', text: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -144,7 +143,7 @@ export default function AIAssistant() {
                     </button>
                   </div>
                   <p className="text-[10px] text-text-muted text-center mt-2">
-                    Powered by Gemini 2.0 Flash
+                    Powered by Gemini Flash
                   </p>
                 </div>
               </>

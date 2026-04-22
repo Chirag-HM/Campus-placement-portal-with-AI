@@ -23,7 +23,8 @@ const interviewHistorySchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  googleId: { type: String, required: true, unique: true },
+  googleId: { type: String, unique: true, sparse: true },
+  password: { type: String },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   avatar: String,

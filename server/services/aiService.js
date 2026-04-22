@@ -2,13 +2,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-flash',
+  model: 'gemini-flash-latest',
   generationConfig: {
     responseMimeType: 'application/json',
   },
 });
 
-const callAI = async (prompt, maxTokens = 4096) => {
+export const callAI = async (prompt, maxTokens = 4096) => {
   try {
     console.log(`🤖 Calling Gemini with ${prompt.length} chars...`);
 
@@ -23,15 +23,23 @@ const callAI = async (prompt, maxTokens = 4096) => {
     const text = result.response.text();
     console.log('✅ Gemini response received, length:', text.length);
 
-    // Parse JSON — handle cases where model wraps in backticks
-    let cleaned = text.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    try {
+      // Parse JSON — handle cases where model wraps in backticks
+      let cleaned = text.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+      }
+      return JSON.parse(cleaned);
+    } catch (parseError) {
+      console.warn('⚠️ Gemini JSON parse failed, returning raw text as response object');
+      // Fallback: If it's not JSON, maybe it's just the text we want
+      return { response: text.trim() };
     }
-
-    return JSON.parse(cleaned);
   } catch (error) {
     console.error('❌ Gemini API Error:', error.message);
+    if (error.message.includes('quota')) {
+      throw new Error('AI Service is currently at capacity. Please try again later.');
+    }
     throw error;
   }
 };
