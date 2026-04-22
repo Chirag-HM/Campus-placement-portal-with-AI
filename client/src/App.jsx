@@ -17,6 +17,8 @@ import LearningPath from '@/pages/LearningPath';
 import Profile from '@/pages/Profile';
 import RecruiterDashboard from '@/pages/RecruiterDashboard';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AIAssistant from '@/components/AIAssistant';
+
 
 export default function App() {
   return (
@@ -42,6 +44,7 @@ export default function App() {
               <Route path="/recruiter" element={<ProtectedRoute roles={['recruiter', 'admin']}><RecruiterDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             </Routes>
+            <AIAssistant />
           </div>
         </SocketProvider>
       </AuthProvider>

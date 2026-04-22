@@ -1,6 +1,6 @@
 import LearningPath from '../models/LearningPath.js';
 import User from '../models/User.js';
-import * as claudeService from '../services/claudeService.js';
+import * as aiService from '../services/aiService.js';
 
 export const generatePath = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ export const generatePath = async (req, res) => {
     }
     if (skillGaps.length === 0) skillGaps = ['General skills for ' + targetRole];
 
-    const { roadmap } = await claudeService.generateLearningPath(skillGaps, targetRole, currentLevel);
+    const { roadmap } = await aiService.generateLearningPath(skillGaps, targetRole, currentLevel);
 
     if (user.learningPath) await LearningPath.findByIdAndDelete(user.learningPath);
 

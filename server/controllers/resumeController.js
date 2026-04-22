@@ -1,7 +1,7 @@
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 import User from '../models/User.js';
 import Job from '../models/Job.js';
-import * as claudeService from '../services/claudeService.js';
+import * as aiService from '../services/aiService.js';
 import { cloudinary } from '../middleware/upload.js';
 import https from 'https';
 import http from 'http';
@@ -77,7 +77,7 @@ export const analyseResume = async (req, res) => {
     const resumeText = pdfData.text;
 
     // Call Claude AI
-    const analysis = await claudeService.analyseResume(resumeText, jobDescription);
+    const analysis = await aiService.analyseResume(resumeText, jobDescription);
 
     // Save to analysis history
     user.resume.analysisHistory.push({
@@ -124,7 +124,7 @@ export const aiShortlistCandidates = async (req, res) => {
       try {
         const pdfBuffer = await downloadPDF(student.resume.url);
         const pdfData = await pdf(pdfBuffer);
-        const analysis = await claudeService.aiShortlist(pdfData.text, jobDescription);
+        const analysis = await aiService.aiShortlist(pdfData.text, jobDescription);
 
         app.matchScore = analysis.matchScore;
         results.push({

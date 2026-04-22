@@ -1,6 +1,6 @@
 import InterviewSession from '../models/InterviewSession.js';
 import User from '../models/User.js';
-import * as claudeService from '../services/claudeService.js';
+import * as aiService from '../services/aiService.js';
 import { getIO, getUserSocket } from '../index.js';
 
 // Start a new interview session
@@ -13,7 +13,7 @@ export const startInterview = async (req, res) => {
     }
 
     // Generate questions via Claude
-    const { questions } = await claudeService.generateQuestions(role, difficulty, roundType);
+    const { questions } = await aiService.generateQuestions(role, difficulty, roundType);
 
     const session = await InterviewSession.create({
       student: req.user._id,
@@ -56,12 +56,22 @@ export const submitAnswer = async (req, res) => {
     const question = session.questions.find(q => q.id === questionId);
     if (!question) return res.status(404).json({ message: 'Question not found' });
 
-    // Evaluate via Claude
-    const evaluation = await claudeService.evaluateAnswer(
-      question.question,
-      userAnswer,
-      session.role
-    );
+    // Evaluate via Gemini
+    let evaluation;
+    if (req.body.language) {
+      evaluation = await aiService.evaluateCode(
+        question.question,
+        userAnswer,
+        req.body.language,
+        session.role
+      );
+    } else {
+      evaluation = await aiService.evaluateAnswer(
+        question.question,
+        userAnswer,
+        session.role
+      );
+    }
 
     // Save answer
     session.answers.push({

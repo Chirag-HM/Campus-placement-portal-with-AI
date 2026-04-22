@@ -3,7 +3,9 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/axios';
 import { useSocket } from '@/hooks/useSocket';
-import { Send, Loader2, ChevronRight, Lightbulb, CheckCircle, Trophy, ArrowLeft } from 'lucide-react';
+import { Send, Loader2, ChevronRight, Lightbulb, CheckCircle, Trophy, ArrowLeft, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import CodeEditor from '@/components/CodeEditor';
+
 
 export default function InterviewSession() {
   const { id } = useParams();
@@ -18,6 +20,50 @@ export default function InterviewSession() {
   const [showHint, setShowHint] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [finalReport, setFinalReport] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+
+  // Speech Recognition setup
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+  if (recognition) {
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('');
+      setAnswer(transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+  }
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognition?.stop();
+    } else {
+      recognition?.start();
+      setIsListening(true);
+    }
+  };
+
+  const speakQuestion = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (autoSpeak && currentQuestion?.question) {
+      speakQuestion(currentQuestion.question);
+    }
+  }, [currentQ, autoSpeak]);
 
   useEffect(() => {
     if (!session) {
@@ -45,6 +91,7 @@ export default function InterviewSession() {
         sessionId: session.sessionId || id,
         questionId: currentQuestion.id,
         userAnswer: answer,
+        language: session.roundType?.toLowerCase().includes('technical') ? 'javascript' : null
       });
       setEvaluation(data.evaluation);
     } catch { /* ignore */ }
@@ -130,15 +177,41 @@ export default function InterviewSession() {
           transition={{ duration: 0.3 }} className="space-y-6">
           {/* Question */}
           <div className="glass-card p-6">
-            <div className="flex items-start justify-between mb-4">
-              <span className="badge badge-purple">Question {currentQ + 1}</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="badge badge-purple">Question {currentQ + 1}</span>
+                <button 
+                  onClick={() => {
+                    setAutoSpeak(!autoSpeak);
+                    if (!autoSpeak) speakQuestion(currentQuestion.question);
+                    else window.speechSynthesis.cancel();
+                  }}
+                  className={`p-2 rounded-lg transition-all ${autoSpeak ? 'bg-primary/20 text-primary' : 'bg-white/5 text-text-muted'}`}
+                  title={autoSpeak ? "Disable Auto-speak" : "Enable Auto-speak"}
+                >
+                  {autoSpeak ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
+              </div>
               {currentQuestion?.expectedTopics?.length > 0 && (
                 <div className="flex gap-1">
                   {currentQuestion.expectedTopics.map(t => <span key={t} className="badge badge-blue text-[10px]">{t}</span>)}
                 </div>
               )}
             </div>
-            <h2 className="font-display text-lg font-semibold leading-relaxed">{currentQuestion?.question}</h2>
+            <h2 className="font-display text-lg font-semibold leading-relaxed">
+              {currentQuestion?.question}
+              {isSpeaking && (
+                <motion.span 
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="ml-2 inline-flex gap-0.5"
+                >
+                  <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                  <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                </motion.span>
+              )}
+            </h2>
 
             {currentQuestion?.hint && (
               <button onClick={() => setShowHint(!showHint)} className="mt-3 flex items-center gap-1 text-yellow-400 text-xs hover:underline">
@@ -150,9 +223,47 @@ export default function InterviewSession() {
 
           {/* Answer */}
           <div className="glass-card p-6">
-            <textarea value={answer} onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your answer here..."
-              className="input-field h-36 resize-none mb-4" disabled={!!evaluation} />
+            {session.roundType?.toLowerCase().includes('technical') ? (
+              <div className="space-y-4 mb-4">
+                <div className="h-[400px]">
+                  <CodeEditor 
+                    value={answer} 
+                    onChange={(v) => setAnswer(v)} 
+                    language="javascript" 
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="relative mb-4">
+                <textarea value={answer} onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Type your answer here or use the mic..."
+                  className="input-field h-36 resize-none pr-12" disabled={!!evaluation} />
+                
+                {!evaluation && (
+                  <button 
+                    onClick={toggleListening}
+                    className={`absolute right-3 bottom-3 p-3 rounded-xl transition-all shadow-lg ${
+                      isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/5 text-text-secondary hover:bg-white/10'
+                    }`}
+                  >
+                    {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
+                )}
+                
+                {isListening && (
+                  <div className="absolute top-3 right-3 flex gap-1 items-end h-4">
+                    {[1, 2, 3, 4].map(i => (
+                      <motion.div
+                        key={i}
+                        animate={{ height: [4, 16, 4] }}
+                        transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
+                        className="w-1 bg-red-500 rounded-full"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {!evaluation ? (
               <button onClick={handleSubmit} disabled={!answer.trim() || submitting}
                 className="btn-primary w-full justify-center py-3 disabled:opacity-50">

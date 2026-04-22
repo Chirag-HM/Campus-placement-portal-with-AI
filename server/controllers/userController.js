@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import Job from '../models/Job.js';
 import InterviewSession from '../models/InterviewSession.js';
+import * as aiService from '../services/aiService.js';
+
 
 export const updateProfile = async (req, res) => {
   try {
@@ -109,5 +111,34 @@ export const getDashboardStats = async (req, res) => {
     res.json({});
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+export const aiCoach = async (req, res) => {
+  try {
+    const { prompt, context } = req.body;
+    const user = await User.findById(req.user._id);
+
+    // Dynamic prompt based on where the user is
+    let systemPrompt = `You are Coach Gemini, a premium career advisor on the PlaceAI Campus Placement Portal.
+The user is currently on the "${context}" page.
+User Info: Name: ${user.name}, Role: ${user.role}, Skills: ${user.skills?.join(', ') || 'Not set'}.
+
+Be encouraging, professional, and concise. Provide actionable advice for their placement journey.`;
+
+    const fullPrompt = `${systemPrompt}\n\nUser Question: ${prompt}\n\nReturn a JSON with a single "response" field.`;
+
+    const genAI = new (await import('@google/generative-ai')).GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    });
+
+    const response = JSON.parse(result.response.text());
+    res.json(response);
+  } catch (error) {
+    console.error('Coach Error:', error);
+    res.status(500).json({ response: "I'm a bit overwhelmed right now. Try again in a moment!" });
   }
 };

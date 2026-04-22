@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-flash-latest',
+  model: 'gemini-1.5-flash',
   generationConfig: {
     responseMimeType: 'application/json',
   },
@@ -166,4 +166,33 @@ Generate all 8 weeks. Include 2-3 resources per week. The "type" field must be o
 Use real, well-known learning platforms (freeCodeCamp, MDN, Coursera, YouTube, LeetCode, etc).`;
 
   return await callAI(prompt, 8192);
+};
+// ─── 6. Evaluate Coding Solution ───────────────────────────────────────────
+export const evaluateCode = async (question, userCode, language, role) => {
+  const prompt = `You are a senior software engineer and technical interviewer.
+Evaluate the candidate's coding solution for a ${role} position.
+
+QUESTION/PROBLEM:
+${question}
+
+PROGRAMMING LANGUAGE: ${language}
+CANDIDATE'S CODE:
+\`\`\`${language}
+${userCode}
+\`\`\`
+
+Return this exact JSON structure:
+{
+  "score": <number 0-10>,
+  "logicCorrectness": <number 0-10>,
+  "timeComplexity": "<e.g. O(n log n)>",
+  "spaceComplexity": "<e.g. O(n)>",
+  "feedback": "<detailed feedback on logic, naming, and efficiency>",
+  "improvements": ["<improvement 1>", "<improvement 2>"],
+  "optimizedCode": "<a cleaner, more optimized version of the code>"
+}
+
+Be strict but fair. If the code doesn't compile or has syntax errors, reflect that in the score.`;
+
+  return await callAI(prompt, 4096);
 };
