@@ -102,14 +102,14 @@ export default function Dashboard() {
     : user?.role === 'recruiter' ? RecruiterDashboard : StudentDashboard;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 sm:space-y-12">
       {/* Premium Header Card */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
-        className="glass-card p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-br from-white/5 to-transparent"
+        className="glass-card p-6 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-br from-white/5 to-transparent overflow-hidden"
       >
-        <div className="text-center md:text-left space-y-4">
+        <div className="text-center md:text-left space-y-4 w-full">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
             <Sparkles className="w-4 h-4 animate-pulse" />
             Next-Gen Placement Suite
@@ -118,7 +118,7 @@ export default function Dashboard() {
             {greeting}, <br className="sm:hidden" />
             <span className="gradient-text">{user?.name?.split(' ')[0]}</span>
           </h1>
-          <p className="text-text-secondary text-lg max-w-md">
+          <p className="text-text-secondary text-base sm:text-lg max-w-md mx-auto md:mx-0">
             Your placement ecosystem is optimized and ready for today's challenges.
           </p>
         </div>

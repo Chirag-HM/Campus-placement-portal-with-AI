@@ -112,11 +112,11 @@ export default function JobBoard() {
           </div>
           <button type="submit" className="btn-primary px-6">Search</button>
         </form>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 custom-scrollbar-hide">
           {['', 'Full-time', 'Internship', 'Part-time', 'Contract'].map(t => (
             <button key={t} onClick={() => { setTypeFilter(t); setPage(1); }}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-all
-                ${typeFilter === t ? 'bg-primary text-white' : 'bg-white/5 text-text-secondary hover:bg-white/10'}`}>
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap
+                ${typeFilter === t ? 'bg-primary text-white shadow-glow shadow-primary/20' : 'bg-white/5 text-text-secondary hover:bg-white/10'}`}>
               {t || 'All'}
             </button>
           ))}
