@@ -135,3 +135,44 @@ Return a JSON with a single "response" field.`;
     res.status(500).json({ response: "I'm a bit overwhelmed right now. Try again in a moment!" });
   }
 };
+export const addExternalApplication = async (req, res) => {
+  try {
+    const { title, company, status, notes } = req.body;
+    const user = await User.findById(req.user._id);
+    user.externalApplications.push({ title, company, status, notes });
+    await user.save();
+    res.status(201).json({ externalApplications: user.externalApplications });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add application', error: error.message });
+  }
+};
+
+export const updateExternalApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    const user = await User.findById(req.user._id);
+    const app = user.externalApplications.id(id);
+    if (!app) return res.status(404).json({ message: 'Application not found' });
+
+    if (status) app.status = status;
+    if (notes) app.notes = notes;
+
+    await user.save();
+    res.json({ externalApplications: user.externalApplications });
+  } catch (error) {
+    res.status(500).json({ message: 'Update failed', error: error.message });
+  }
+};
+
+export const deleteExternalApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(req.user._id);
+    user.externalApplications.pull(id);
+    await user.save();
+    res.json({ externalApplications: user.externalApplications });
+  } catch (error) {
+    res.status(500).json({ message: 'Delete failed', error: error.message });
+  }
+};

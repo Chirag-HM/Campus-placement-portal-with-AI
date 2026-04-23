@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import { handleLoginStreak } from '../services/gamificationService.js';
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -58,7 +59,8 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user);
-    res.json({ user, token });
+    const streakResult = await handleLoginStreak(user._id);
+    res.json({ user, token, streakResult });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: error.message });
   }
@@ -84,7 +86,8 @@ export const getMe = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ user });
+    const streakResult = await handleLoginStreak(user._id);
+    res.json({ user, streakResult });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

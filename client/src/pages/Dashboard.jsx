@@ -5,7 +5,7 @@ import api from '@/lib/axios';
 import { Link } from 'react-router-dom';
 import {
   FileText, Briefcase, MessageSquare, GraduationCap,
-  TrendingUp, Users, Award, Clock, ArrowRight, Sparkles, Zap
+  TrendingUp, Users, Award, Clock, ArrowRight, Sparkles, Zap, Trophy
 } from 'lucide-react';
 
 const containerVariants = {
@@ -123,15 +123,46 @@ export default function Dashboard() {
           </p>
         </div>
         
-        <div className="shrink-0">
-          <div className="glass-card p-6 border-primary/20 bg-primary/5 flex flex-col items-center gap-4 text-center min-w-[200px]">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center relative">
-              <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping absolute" />
-              <div className="w-3 h-3 rounded-full bg-emerald-500 relative" />
+        <div className="shrink-0 w-full md:w-auto">
+          <div className="glass-card p-8 border-primary/20 bg-primary/5 min-w-[300px] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Trophy className="w-20 h-20 rotate-12" />
             </div>
-            <div>
-              <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] mb-1">Current Status</p>
-              <p className="text-lg font-bold text-white tracking-tight">Actively Seeking</p>
+            
+            <div className="flex items-center justify-between mb-6 relative">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-text-muted font-black uppercase tracking-[0.3em] mb-1">Career Level</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center font-display font-black text-primary shadow-glow shadow-primary/20">
+                    {user?.level || 1}
+                  </div>
+                  <span className="text-xl font-bold tracking-tight">
+                    {user?.level >= 10 ? 'Elite Candidate' : user?.level >= 5 ? 'Job Ready' : 'Rising Talent'}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right flex flex-col items-end">
+                 <div className="flex items-center gap-2 mb-1">
+                   <Zap className="w-3 h-3 text-orange-500 fill-orange-500" />
+                   <span className="text-[10px] text-text-muted font-black uppercase tracking-[0.3em]">Streak</span>
+                 </div>
+                 <p className="text-xl font-black text-white">{user?.streak?.count || 0} Days</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 relative">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                <span className="text-primary">Next Level</span>
+                <span className="text-text-muted">{(user?.xp || 0)} / {(user?.level || 1) * 500} XP</span>
+              </div>
+              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((user?.xp || 0) / ((user?.level || 1) * 500)) * 100}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-primary to-secondary shadow-glow shadow-primary/30"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -187,8 +218,26 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Feed */}
+          {/* Feed & Badges */}
           <div className="space-y-6">
+            {user?.badges?.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="font-display text-2xl font-bold tracking-tight">Achievements</h2>
+                <div className="glass-card p-6 flex flex-wrap gap-4">
+                  {user.badges.map((b, i) => (
+                    <div key={i} className="group relative">
+                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all cursor-help">
+                        <Award className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                      </div>
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-dark-900 border border-white/10 rounded-lg text-[10px] font-black uppercase whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        {b.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <h2 className="font-display text-2xl font-bold tracking-tight">Live Updates</h2>
             <div className="glass-card p-8 divide-y divide-white/5 space-y-6">
               {[

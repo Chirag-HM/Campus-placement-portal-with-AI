@@ -2,6 +2,7 @@ import InterviewSession from '../models/InterviewSession.js';
 import User from '../models/User.js';
 import * as aiService from '../services/aiService.js';
 import { getIO, getUserSocket } from '../index.js';
+import { awardXP } from '../services/gamificationService.js';
 
 // Start a new interview session
 export const startInterview = async (req, res) => {
@@ -129,7 +130,7 @@ export const completeInterview = async (req, res) => {
     await session.save();
 
     // Save to user's interview history
-    await User.findByIdAndUpdate(req.user._id, {
+    const user = await User.findByIdAndUpdate(req.user._id, {
       $push: {
         interviewHistory: {
           sessionId: session._id,
@@ -141,6 +142,9 @@ export const completeInterview = async (req, res) => {
       },
     });
 
+    // Award XP based on score (e.g., score of 80 = 80 XP)
+    const xpResult = await awardXP(req.user._id, session.totalScore);
+
     // Emit completion event
     const io = getIO();
     const socketId = getUserSocket(req.user._id.toString());
@@ -151,7 +155,7 @@ export const completeInterview = async (req, res) => {
       });
     }
 
-    res.json({ session });
+    res.json({ session, xpResult });
   } catch (error) {
     console.error('Complete interview error:', error);
     res.status(500).json({ message: 'Failed to complete', error: error.message });

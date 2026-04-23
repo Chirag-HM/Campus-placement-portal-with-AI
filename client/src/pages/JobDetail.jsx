@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '@/lib/axios';
 import { useAuth } from '@/hooks/useAuth';
-import { MapPin, Clock, DollarSign, Building, Calendar, Users, ArrowLeft, Loader2 } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Building, Calendar, Users, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { formatDate, getStatusColor } from '@/lib/utils';
 
 export default function JobDetail() {
@@ -13,6 +13,8 @@ export default function JobDetail() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [showApplyForm, setShowApplyForm] = useState(false);
 
   useEffect(() => {
     api.get(`/jobs/${id}`).then(r => setJob(r.data.job)).catch(() => navigate('/jobs')).finally(() => setLoading(false));
@@ -21,8 +23,9 @@ export default function JobDetail() {
   const handleApply = async () => {
     setApplying(true);
     try {
-      await api.post(`/jobs/${id}/apply`);
+      await api.post(`/jobs/${id}/apply`, { coverLetter });
       setJob(prev => ({ ...prev, applied: true }));
+      setShowApplyForm(false);
     } catch { /* ignore */ }
     finally { setApplying(false); }
   };
@@ -76,11 +79,40 @@ export default function JobDetail() {
           </div>
         )}
 
-        {user?.role === 'student' && (
-          <button onClick={handleApply} disabled={hasApplied || applying}
-            className="btn-primary w-full justify-center py-3 disabled:opacity-50">
-            {applying ? <Loader2 className="w-5 h-5 animate-spin" /> : hasApplied ? 'Already Applied' : 'Apply Now'}
-          </button>
+        {user?.role === 'student' && !hasApplied && (
+          <div className="space-y-4">
+            {!showApplyForm ? (
+              <button onClick={() => setShowApplyForm(true)}
+                className="btn-primary w-full justify-center py-3">
+                Apply for this Role
+              </button>
+            ) : (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Cover Letter / Pitch</label>
+                  <textarea 
+                    value={coverLetter} 
+                    onChange={(e) => setCoverLetter(e.target.value)}
+                    placeholder="Tell the recruiter why you're a great fit..."
+                    className="input-field min-h-[150px] py-4"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowApplyForm(false)} className="btn-secondary flex-1 py-3">Cancel</button>
+                  <button onClick={handleApply} disabled={applying}
+                    className="btn-primary flex-1 justify-center py-3 disabled:opacity-50">
+                    {applying ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Application'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        )}
+
+        {hasApplied && (
+          <div className="bg-emerald/10 border border-emerald/20 p-4 rounded-2xl flex items-center justify-center gap-2 text-emerald font-bold">
+            <CheckCircle className={`w-5 h-5`} /> Already Applied
+          </div>
         )}
       </motion.div>
     </div>

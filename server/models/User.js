@@ -45,10 +45,45 @@ const userSchema = new mongoose.Schema({
   learningPath: { type: mongoose.Schema.Types.ObjectId, ref: 'LearningPath' },
   appliedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
   savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
+  externalApplications: [{
+    title: String,
+    company: String,
+    status: {
+      type: String,
+      enum: ['applied', 'shortlisted', 'interviewing', 'rejected', 'offered', 'hired'],
+      default: 'applied'
+    },
+    appliedAt: { type: Date, default: Date.now },
+    notes: String
+  }],
+  xp: { type: Number, default: 0 },
+  level: { type: Number, default: 1 },
+  badges: [{
+    name: String,
+    icon: String,
+    awardedAt: { type: Date, default: Date.now }
+  }],
+  completedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  certifications: [{
+    name: String,
+    issuedBy: String,
+    date: { type: Date, default: Date.now },
+    url: String
+  }],
+  lastLoginDate: Date,
+  streak: {
+    count: { type: Number, default: 0 },
+    lastAwarded: Date,
+    highest: { type: Number, default: 0 }
+  },
   linkedIn: String,
   github: String,
   portfolio: String,
 }, { timestamps: true });
+
+userSchema.virtual('nextLevelXp').get(function () {
+  return this.level * 500;
+});
 
 userSchema.virtual('isProfileComplete').get(function () {
   return !!(this.college && this.branch && this.graduationYear && this.cgpa && this.skills?.length > 0);

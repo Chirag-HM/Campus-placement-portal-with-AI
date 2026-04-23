@@ -14,6 +14,9 @@ export function AuthProvider({ children }) {
       if (!token) { setLoading(false); return; }
       const { data } = await api.get('/auth/me');
       setUser(data.user);
+      if (data.streakResult?.xpAwarded > 0) {
+        console.log(`🔥 Streak! Awarded ${data.streakResult.xpAwarded} XP`);
+      }
     } catch {
       localStorage.removeItem('token');
       setToken(null);

@@ -1,6 +1,8 @@
 import Job from '../models/Job.js';
 import User from '../models/User.js';
 import { getIO, getUserSocket } from '../index.js';
+import { awardXP } from '../services/gamificationService.js';
+import { fetchAdzunaJobs } from '../services/adzunaService.js';
 
 // Create a new job (recruiter/admin)
 export const createJob = async (req, res) => {
@@ -100,7 +102,13 @@ export const applyToJob = async (req, res) => {
     );
     if (alreadyApplied) return res.status(400).json({ message: 'Already applied' });
 
-    job.applications.push({ student: req.user._id });
+    const { coverLetter, portfolioLink, answers } = req.body;
+    job.applications.push({ 
+      student: req.user._id,
+      coverLetter,
+      portfolioLink,
+      answers
+    });
     await job.save();
 
     // Add to user's appliedJobs
@@ -108,7 +116,10 @@ export const applyToJob = async (req, res) => {
       $addToSet: { appliedJobs: job._id },
     });
 
-    res.json({ message: 'Applied successfully' });
+    // Award XP for applying
+    const xpResult = await awardXP(req.user._id, 10);
+
+    res.json({ message: 'Applied successfully', xpResult });
   } catch (error) {
     res.status(500).json({ message: 'Application failed', error: error.message });
   }
@@ -214,5 +225,15 @@ export const getAppliedJobs = async (req, res) => {
     res.json({ jobs });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const getAdzunaJobs = async (req, res) => {
+  try {
+    const { what, page } = req.query;
+    const jobs = await fetchAdzunaJobs(what, page);
+    res.json({ jobs });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch Adzuna jobs', error: error.message });
   }
 };

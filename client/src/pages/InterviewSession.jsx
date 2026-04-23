@@ -105,11 +105,16 @@ export default function InterviewSession() {
     }
   };
 
+  const [levelUpData, setLevelUpData] = useState(null);
+
   const handleComplete = async () => {
     try {
       const { data } = await api.post('/interview/complete', { sessionId: session.sessionId || id });
       setFinalReport(data.session);
       setCompleted(true);
+      if (data.xpResult?.leveledUp) {
+        setLevelUpData(data.xpResult);
+      }
     } catch { /* ignore */ }
   };
 
@@ -123,6 +128,31 @@ export default function InterviewSession() {
   if (completed && finalReport) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12">
+        <AnimatePresence>
+          {levelUpData && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/80 backdrop-blur-md p-6"
+            >
+              <div className="glass-card p-12 text-center max-w-md relative overflow-hidden">
+                <div className="absolute inset-0 bg-primary/10 pulse-glow -z-10" />
+                <motion.div 
+                  animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: 2 }}
+                >
+                  <Trophy className="w-24 h-24 text-yellow-400 mx-auto mb-6 drop-shadow-glow" />
+                </motion.div>
+                <h2 className="text-4xl font-display font-black mb-2">LEVEL UP!</h2>
+                <p className="text-primary font-bold text-lg mb-6">You've reached Level {levelUpData.level}</p>
+                <p className="text-text-secondary mb-8">Your placement readiness is increasing. New opportunities await!</p>
+                <button onClick={() => setLevelUpData(null)} className="btn-primary w-full py-4">Awesome!</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <Trophy className="w-20 h-20 text-yellow-400 mx-auto mb-6 drop-shadow-glow" />

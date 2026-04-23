@@ -5,9 +5,12 @@ const applicationSchema = new mongoose.Schema({
   matchScore: { type: Number, default: 0 },
   status: {
     type: String,
-    enum: ['applied', 'shortlisted', 'rejected', 'hired'],
+    enum: ['applied', 'shortlisted', 'interviewing', 'rejected', 'offered', 'hired'],
     default: 'applied'
   },
+  coverLetter: String,
+  portfolioLink: String,
+  answers: [{ question: String, answer: String }],
   appliedAt: { type: Date, default: Date.now }
 });
 

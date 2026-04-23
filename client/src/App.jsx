@@ -14,6 +14,7 @@ import JobDetail from '@/pages/JobDetail';
 import InterviewPrep from '@/pages/InterviewPrep';
 import InterviewSession from '@/pages/InterviewSession';
 import LearningPath from '@/pages/LearningPath';
+import ApplicationTracker from '@/pages/ApplicationTracker';
 import Profile from '@/pages/Profile';
 import RecruiterDashboard from '@/pages/RecruiterDashboard';
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/interview" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
               <Route path="/interview/:id" element={<ProtectedRoute><InterviewSession /></ProtectedRoute>} />
               <Route path="/learning" element={<ProtectedRoute><LearningPath /></ProtectedRoute>} />
+              <Route path="/tracker" element={<ProtectedRoute><ApplicationTracker /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
               <Route path="/recruiter" element={<ProtectedRoute roles={['recruiter', 'admin']}><RecruiterDashboard /></ProtectedRoute>} />

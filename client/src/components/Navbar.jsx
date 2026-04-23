@@ -1,16 +1,21 @@
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { LayoutDashboard, FileText, Briefcase, MessageSquare, Map, User, Bell, LogIn, BrainCircuit, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LayoutDashboard, FileText, Briefcase, MessageSquare, Map, User, Bell, LogIn, BrainCircuit, ChevronDown, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useState } from 'react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { notifications, clearNotifications } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
 
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Resume AI', path: '/resume', icon: FileText },
     { label: 'Jobs', path: '/jobs', icon: Briefcase },
+    { label: 'Tracker', path: '/tracker', icon: CheckCircle },
     { label: 'Interview Prep', path: '/interview', icon: MessageSquare },
     { label: 'Learning Path', path: '/learning', icon: Map },
   ];
@@ -62,10 +67,65 @@ export default function Navbar() {
           <div className="flex items-center gap-5">
             {user ? (
               <>
-                <button className="relative p-2.5 text-text-secondary hover:text-white transition-all bg-white/5 rounded-xl border border-white/5 hover:border-white/10">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-dark-950 shadow-glow shadow-primary/50" />
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className={`relative p-2.5 transition-all rounded-xl border ${
+                      notifications.length > 0 ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-white/5 border-white/5 text-text-secondary hover:text-white'
+                    }`}
+                  >
+                    <Bell className="w-5 h-5" />
+                    {notifications.length > 0 && (
+                      <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-dark-950 shadow-glow shadow-primary/50" />
+                    )}
+                  </button>
+
+                  {/* Dropdown */}
+                  <AnimatePresence>
+                    {showNotifications && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 mt-4 w-80 glass-card p-4 z-20 shadow-2xl origin-top-right"
+                        >
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
+                            <h3 className="font-display font-bold">Notifications</h3>
+                            <button onClick={clearNotifications} className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-primary transition-colors">
+                              Clear All
+                            </button>
+                          </div>
+
+                          <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                            {notifications.length === 0 ? (
+                              <div className="py-8 text-center space-y-2">
+                                <Bell className="w-8 h-8 text-white/10 mx-auto" />
+                                <p className="text-xs text-text-muted">No new notifications</p>
+                              </div>
+                            ) : (
+                              notifications.map((n) => (
+                                <Link 
+                                  key={n.id} 
+                                  to={n.link} 
+                                  onClick={() => setShowNotifications(false)}
+                                  className="flex flex-col gap-1 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">{n.title}</span>
+                                    <span className="text-[9px] text-text-muted">{new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                  <p className="text-xs text-white leading-relaxed group-hover:text-primary transition-colors">{n.message}</p>
+                                </Link>
+                              ))
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
                 
                 <div className="h-10 w-[1px] bg-white/10 hidden sm:block" />
 

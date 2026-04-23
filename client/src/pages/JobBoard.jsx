@@ -6,9 +6,11 @@ import { useSocket } from '@/hooks/useSocket';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Briefcase, MapPin, Clock, DollarSign, Search,
-  Filter, Bookmark, BookmarkCheck, Loader2, ChevronLeft, ChevronRight
+  Filter, Bookmark, BookmarkCheck, Loader2, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+// JobBoard.jsx — top of file
+import { ExternalLink } from 'lucide-react';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4 } }) };
 
@@ -22,21 +24,28 @@ export default function JobBoard() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
   const [savedJobs, setSavedJobs] = useState(user?.savedJobs || []);
+  const [source, setSource] = useState('internal'); // 'internal' or 'adzuna'
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: 12 });
-      if (search) params.append('search', search);
-      if (typeFilter) params.append('type', typeFilter);
-      const { data } = await api.get(`/jobs?${params}`);
-      setJobs(data.jobs);
-      setPagination(data.pagination);
+      if (source === 'adzuna') {
+        const { data } = await api.get(`/jobs/adzuna?what=${search || 'software'}&page=${page}`);
+        setJobs(data.jobs);
+        setPagination({ totalPages: 5, currentPage: page }); // Adzuna paging simplified
+      } else {
+        const params = new URLSearchParams({ page, limit: 12 });
+        if (search) params.append('search', search);
+        if (typeFilter) params.append('type', typeFilter);
+        const { data } = await api.get(`/jobs?${params}`);
+        setJobs(data.jobs);
+        setPagination(data.pagination);
+      }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchJobs(); }, [page, typeFilter]);
+  useEffect(() => { fetchJobs(); }, [page, typeFilter, source]);
 
   useEffect(() => {
     if (!socket) return;
@@ -70,8 +79,26 @@ export default function JobBoard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="font-display text-3xl font-bold"><span className="gradient-text">Job Board</span></h1>
-        <p className="text-text-secondary mt-1">Discover opportunities matching your profile</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold"><span className="gradient-text">Job Board</span></h1>
+            <p className="text-text-secondary mt-1">Discover opportunities matching your profile</p>
+          </div>
+          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
+            <button 
+              onClick={() => { setSource('internal'); setPage(1); }}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${source === 'internal' ? 'bg-primary text-white shadow-glow shadow-primary/20' : 'text-text-muted hover:text-white'}`}
+            >
+              Portal Jobs
+            </button>
+            <button 
+              onClick={() => { setSource('adzuna'); setPage(1); }}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${source === 'adzuna' ? 'bg-primary text-white shadow-glow shadow-primary/20' : 'text-text-muted hover:text-white'}`}
+            >
+              Live Jobs (Adzuna)
+            </button>
+          </div>
+        </div>
       </motion.div>
 
       {/* Search + Filters */}
@@ -115,7 +142,15 @@ export default function JobBoard() {
               {job.isNew && <span className="badge badge-green text-[10px] mb-3 self-start">New</span>}
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-display font-semibold">{job.title}</h3>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="font-display font-semibold">{job.title}</h3>
+                    {['Google', 'Microsoft', 'Amazon', 'Flipkart', 'Zomato'].includes(job.company) && (
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest rounded-md border border-primary/20">
+                        <Sparkles className="w-2 h-2" />
+                        Featured
+                      </span>
+                    )}
+                  </div>
                   <p className="text-text-secondary text-sm">{job.company}</p>
                 </div>
                 <button onClick={() => toggleSave(job._id)} className="p-1.5 rounded-lg hover:bg-white/5">
@@ -143,12 +178,21 @@ export default function JobBoard() {
               <div className="mt-auto flex items-center justify-between pt-3 border-t border-white/5">
                 {job.deadline && <span className="text-text-muted text-xs">Due {formatDate(job.deadline)}</span>}
                 <div className="flex gap-2 ml-auto">
-                  <Link to={`/jobs/${job._id}`} className="btn-secondary text-xs py-1.5 px-3">Details</Link>
-                  {user?.role === 'student' && (
-                    <button onClick={() => handleApply(job._id)} disabled={job.applied}
-                      className="btn-primary text-xs py-1.5 px-3 disabled:opacity-50">
-                      {job.applied ? 'Applied' : 'Apply'}
-                    </button>
+                  {source === 'adzuna' ? (
+                    <a href={job.url} target="_blank" rel="noopener noreferrer" 
+                      className="btn-primary text-xs py-1.5 px-3 flex items-center gap-2">
+                      Apply Externally <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <>
+                      <Link to={`/jobs/${job._id}`} className="btn-secondary text-xs py-1.5 px-3">Details</Link>
+                      {user?.role === 'student' && (
+                        <button onClick={() => handleApply(job._id)} disabled={job.applied}
+                          className="btn-primary text-xs py-1.5 px-3 disabled:opacity-50">
+                          {job.applied ? 'Applied' : 'Apply'}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
